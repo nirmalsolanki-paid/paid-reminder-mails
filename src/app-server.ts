@@ -72,11 +72,7 @@ async function initializeServer() {
     mongoConfig.pass = Config.db.password;
     mongoConfig.authSource = 'admin';
   }
-  console.log(
-    `mongodb://${Config.dbHost}:${Config.dbPort}/${
-      Config.debug && !Config.staging ? `${DB_SERVER}-` : ''
-    }${Config.dbName}`
-  );
+
   // Connect to MongoDB using Mongoose
   mongoose
     .connect(
@@ -118,29 +114,19 @@ async function initializeServer() {
     process.env.PORT ?? Config.server[env].port ?? 8080
   );
 
-  // If all required SSL files exist, create an HTTPS server
   if (privateKeyFile && certificateFile && caBundleFile) {
-    // Set up SSL credentials for secure server connection
     const credentials = {
       cert: certificateFile,
       ca: caBundleFile,
       key: privateKeyFile,
-      secureOptions: constants.SSL_OP_NO_SSLv3 || constants.SSL_OP_NO_SSLv2
+      secureOptions: constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_SSLv2
     };
-    // Create and start the HTTPS server with the provided credentials
-    const httpsServer = https.createServer(credentials, server);
-    const serverHttpsApp = httpsServer.listen(Number(PORT), Config.host, () => {
-      const addressInfo = serverHttpsApp.address();
-      if (addressInfo && typeof addressInfo !== 'string') {
-        console.log(
-          `Secure Server listening on : \n\r\t\t${addressInfo.address}:${addressInfo.port}`
-        );
-      } else {
-        console.error('Server address information is unavailable');
-      }
+
+    https.createServer(credentials, server).listen(PORT, '0.0.0.0', () => {
+      console.log(`HTTPS server running on port ${PORT}`);
     });
   } else {
-    // Cloud Run, local dev: HTTP only
+    // Cloud Run path — REQUIRED
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`HTTP server running on port ${PORT}`);
     });
