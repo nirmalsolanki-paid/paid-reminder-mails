@@ -14,5 +14,5 @@ COPY . .
 # Build TypeScript
 RUN npm run build
 
-EXPOSE 4903
+EXPOSE 8080
 CMD ["node", "dist/app-server.js"]
