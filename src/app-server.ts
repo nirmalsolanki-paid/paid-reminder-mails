@@ -114,7 +114,10 @@ async function initializeServer() {
     caBundleFile = fs.readFileSync(caBundlePath, 'utf8');
   }
 
-  const PORT = process.env.PORT || Config.server[env].port;
+  const PORT: number = Number(
+    process.env.PORT ?? Config.server[env].port ?? 8080
+  );
+
   // If all required SSL files exist, create an HTTPS server
   if (privateKeyFile && certificateFile && caBundleFile) {
     // Set up SSL credentials for secure server connection
@@ -137,7 +140,10 @@ async function initializeServer() {
       }
     });
   } else {
-    console.log(`Server is running on https://localhost:${PORT}`);
+    // Cloud Run, local dev: HTTP only
+    server.listen(PORT, '0.0.0.0', () => {
+      console.log(`HTTP server running on port ${PORT}`);
+    });
   }
 
   console.log(`✅ Server initialized with secrets for environment!!!`);
