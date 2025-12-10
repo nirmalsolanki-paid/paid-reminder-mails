@@ -114,6 +114,7 @@ async function initializeServer() {
     caBundleFile = fs.readFileSync(caBundlePath, 'utf8');
   }
 
+  const PORT = process.env.PORT || Config.server[env].port;
   // If all required SSL files exist, create an HTTPS server
   if (privateKeyFile && certificateFile && caBundleFile) {
     // Set up SSL credentials for secure server connection
@@ -125,24 +126,18 @@ async function initializeServer() {
     };
     // Create and start the HTTPS server with the provided credentials
     const httpsServer = https.createServer(credentials, server);
-    const serverHttpsApp = httpsServer.listen(
-      Number(Config.server[env].port),
-      Config.host,
-      () => {
-        const addressInfo = serverHttpsApp.address();
-        if (addressInfo && typeof addressInfo !== 'string') {
-          console.log(
-            `Secure Server listening on : \n\r\t\t${addressInfo.address}:${addressInfo.port}`
-          );
-        } else {
-          console.error('Server address information is unavailable');
-        }
+    const serverHttpsApp = httpsServer.listen(Number(PORT), Config.host, () => {
+      const addressInfo = serverHttpsApp.address();
+      if (addressInfo && typeof addressInfo !== 'string') {
+        console.log(
+          `Secure Server listening on : \n\r\t\t${addressInfo.address}:${addressInfo.port}`
+        );
+      } else {
+        console.error('Server address information is unavailable');
       }
-    );
+    });
   } else {
-    console.log(
-      `Server is running on https://localhost:${Config.server[env].port}`
-    );
+    console.log(`Server is running on https://localhost:${PORT}`);
   }
 
   console.log(`✅ Server initialized with secrets for environment!!!`);
