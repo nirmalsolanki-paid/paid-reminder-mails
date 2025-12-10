@@ -104,10 +104,10 @@ const fetDynamicTemplateDataForInvoice = async ({
     const paidDate = invoice.dueDate
       ? moment.unix(invoice.dueDate).format('MMMM DD, YYYY')
       : invoice.due_date
-        ? moment.unix(invoice.due_date).format('MMMM DD, YYYY')
-        : invoice.latest_invoice?.created
-          ? moment.unix(invoice.latest_invoice.created).format('MMMM DD, YYYY')
-          : moment.unix(invoice.created).format('MMMM DD, YYYY');
+      ? moment.unix(invoice.due_date).format('MMMM DD, YYYY')
+      : invoice.latest_invoice?.created
+      ? moment.unix(invoice.latest_invoice.created).format('MMMM DD, YYYY')
+      : moment.unix(invoice.created).format('MMMM DD, YYYY');
 
     due_date = `Paid on ${paidDate}`;
   } else {

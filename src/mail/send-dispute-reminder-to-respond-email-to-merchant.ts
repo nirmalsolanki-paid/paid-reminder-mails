@@ -36,7 +36,12 @@ export const sendDisputeRemainderToRespondEmail = async ({
     );
 
     const msg = {
-      to: `<${stripeOnboardingAccount && typeof stripeOnboardingAccount !== 'string' ? stripeOnboardingAccount.account?.business_profile?.support_email || '' : ''}>`,
+      to: `<${
+        stripeOnboardingAccount && typeof stripeOnboardingAccount !== 'string'
+          ? stripeOnboardingAccount.account?.business_profile?.support_email ||
+            ''
+          : ''
+      }>`,
       from: {
         email: Config?.emails[env]?.paymentsEmail as string,
         name: 'PaidPayments'

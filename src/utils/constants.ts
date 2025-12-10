@@ -11,8 +11,8 @@ export const TRANSACTION_URL_NEWUI = `payments/transactions?type=adjustment`;
 export const LOCAL_SERVER = Config.sandboxServer
   ? 'sandbox'
   : Config.env === Config.serverENV
-    ? Config.serverENV
-    : 'dev';
+  ? Config.serverENV
+  : 'dev';
 
 export const SUBSCRIPTION_STATUS = ['inActive', 'active', 'canceled'];
 
