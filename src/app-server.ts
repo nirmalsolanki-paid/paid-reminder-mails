@@ -3,14 +3,10 @@ import mongoose from 'mongoose';
 import morgan from 'morgan';
 import winston from 'winston';
 import expressWinston from 'express-winston';
-import fs from 'fs';
 
-import https from 'https';
-import constants from 'constants';
 import { Routing } from './app-routes.ts';
 import { Config } from './config.ts';
 import { DB_SERVER } from './utils/constants.ts';
-import { getStripeOnboardingDetailsByAccountId } from './dao/stripe-onboarding-account.dao.ts';
 
 async function initializeServer() {
   // Pass the prefix to the config loader
@@ -91,46 +87,13 @@ async function initializeServer() {
 
   server.use(Routing);
 
-  // Check for the existence of SSL key, certificate, and CA bundle files
-  let privateKeyFile;
-  const privateKeyPath = Config?.privateKey;
-  if (privateKeyPath && fs.existsSync(privateKeyPath)) {
-    privateKeyFile = fs.readFileSync(privateKeyPath, 'utf8');
-  }
-
-  let certificateFile;
-  const certificatePath = Config?.certificate;
-  if (certificatePath && fs.existsSync(certificatePath)) {
-    certificateFile = fs.readFileSync(certificatePath, 'utf8');
-  }
-
-  let caBundleFile;
-  const caBundlePath = Config?.ca_bundle;
-  if (caBundlePath && fs.existsSync(caBundlePath)) {
-    caBundleFile = fs.readFileSync(caBundlePath, 'utf8');
-  }
-
   const PORT: number = Number(
     process.env.PORT ?? Config.server[env].port ?? 8080
   );
 
-  if (privateKeyFile && certificateFile && caBundleFile) {
-    const credentials = {
-      cert: certificateFile,
-      ca: caBundleFile,
-      key: privateKeyFile,
-      secureOptions: constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_SSLv2
-    };
-
-    https.createServer(credentials, server).listen(PORT, '0.0.0.0', () => {
-      console.log(`HTTPS server running on port ${PORT}`);
-    });
-  } else {
-    // Cloud Run path — REQUIRED
-    server.listen(PORT, '0.0.0.0', () => {
-      console.log(`HTTP server running on port ${PORT}`);
-    });
-  }
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log(`HTTP server running on port ${PORT}`);
+  });
 
   console.log(`✅ Server initialized with secrets for environment!!!`);
 }

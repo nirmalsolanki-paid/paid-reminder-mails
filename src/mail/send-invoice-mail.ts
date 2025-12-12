@@ -84,16 +84,17 @@ const fetDynamicTemplateDataForInvoice = async ({
   origin: string;
   number: string;
 }) => {
+  const [CompanyDetails, stripeDetails] = await Promise.all([
+    getCompanyDetailById({ _id: companyId }),
+    getStripeOnboardingDetailsByCompanyId({ companyId })
+  ]);
+
   const isSubscription =
     invoice.billing_reason?.includes('subscription') ||
     !!invoice?.billing_reason ||
     false;
   const currency = invoice?.currency || 'usd';
   const currencySign = getCurrency({ currency });
-  const CompanyDetails = await getCompanyDetailById({ _id: companyId });
-  const stripeDetails = await getStripeOnboardingDetailsByCompanyId({
-    companyId
-  });
   const companyLogo = (CompanyDetails && CompanyDetails.companyLogo) || '';
   let due_date = null;
   const isPaid =
@@ -101,20 +102,19 @@ const fetDynamicTemplateDataForInvoice = async ({
     invoice?.status?.toLowerCase() === 'paid';
 
   if (isPaid) {
-    const paidDate = invoice.dueDate
-      ? moment.unix(invoice.dueDate).format('MMMM DD, YYYY')
-      : invoice.due_date
-      ? moment.unix(invoice.due_date).format('MMMM DD, YYYY')
-      : invoice.latest_invoice?.created
-      ? moment.unix(invoice.latest_invoice.created).format('MMMM DD, YYYY')
-      : moment.unix(invoice.created).format('MMMM DD, YYYY');
+    const paidTimestamp =
+      invoice.dueDate ||
+      invoice.due_date ||
+      invoice.latest_invoice?.created ||
+      invoice.created;
+    const paidDate = moment.unix(paidTimestamp).utc().format('MMMM DD, YYYY');
 
     due_date = `Paid on ${paidDate}`;
   } else {
     const dueDateTs =
       invoice.dueDate || invoice.latest_invoice?.due_date || invoice.due_date;
 
-    due_date = `Due on ${moment.unix(dueDateTs).format('MMMM DD, YYYY')}`;
+    due_date = `Due on ${moment.unix(dueDateTs).utc().format('MMMM DD, YYYY')}`;
   }
   const defaultCustomerMessage = (
     stripeDetails?.accountSettings as AccountSettings

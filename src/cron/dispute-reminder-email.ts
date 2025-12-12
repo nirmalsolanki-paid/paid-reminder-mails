@@ -17,9 +17,11 @@ export const sendDisputeReminderEmails = async (): Promise<void> => {
     const { id, created, dueBy, accountId } = dispute;
     const transactionDate = moment
       .unix(Number(created))
+      .utc()
       .format('MMMM DD, YYYY');
     const dueDateFormated = moment
       .unix(Number(dueBy))
+      .utc()
       .format('MMMM DD, YYYY, hh:mm:ss A');
 
     const dueDate = moment.unix(Number(dueBy));
