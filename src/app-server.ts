@@ -5,11 +5,12 @@ import winston from 'winston';
 import expressWinston from 'express-winston';
 
 import { Routing } from './app-routes.ts';
-import { Config } from './config.ts';
+import { createConfig } from './config.ts';
 import { DB_SERVER } from './utils/constants.ts';
+import { IConfig } from './utils/interfaces.ts';
 
 async function initializeServer() {
-  // Pass the prefix to the config loader
+  const Config: IConfig = await createConfig();
   const env = Config.env ?? 'development';
   const server = express();
 

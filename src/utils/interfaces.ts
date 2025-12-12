@@ -20,9 +20,6 @@ interface IServerConfig {
 }
 
 interface IStripeConfig {
-  supportReceiverEmail: string | undefined;
-  supportEmail: string | undefined;
-  feedbackEmail: string | undefined;
   paymentsEmail: string | undefined;
 }
 
