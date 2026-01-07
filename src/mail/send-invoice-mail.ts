@@ -8,6 +8,9 @@ import { getStripeOnboardingDetailsByCompanyId } from '../dao/stripe-onboarding-
 import { getCompanyDetailById } from '../dao/company-details.dao.ts';
 import { AccountSettings, InvoiceData } from './sendgrid.interface.ts';
 
+const cleanText = (text = '') =>
+  text.replace(/[\u202A-\u202E\u2066-\u2069]/g, '');
+
 export const sendInvoiceMail = async ({
   companyId,
   invoice,
@@ -37,15 +40,18 @@ export const sendInvoiceMail = async ({
     });
   }
 
+  const toEmail =
+    email ||
+    clonedInvoice?.latest_invoice?.customer_email ||
+    clonedInvoice?.customer_email ||
+    customerById?.email;
+
+  const fromEmail = Config.emails[env].paymentsEmail || 'no-reply@paid.com';
+
   const msg = {
-    to: `<${
-      email ||
-      clonedInvoice?.latest_invoice?.customer_email ||
-      clonedInvoice?.customer_email ||
-      customerById?.email
-    }>`,
+    to: toEmail,
     from: {
-      email: Config.emails[env].paymentsEmail || 'default@example.com',
+      email: fromEmail,
       name: 'PaidPayments'
     },
     sender: 'PaidPayments',
@@ -116,6 +122,7 @@ const fetDynamicTemplateDataForInvoice = async ({
 
     due_date = `Due on ${moment.unix(dueDateTs).utc().format('MMMM DD, YYYY')}`;
   }
+
   const defaultCustomerMessage = (
     stripeDetails?.accountSettings as AccountSettings
   )?.invoiceCustomization?.defaultCustomerMessage;
@@ -123,19 +130,20 @@ const fetDynamicTemplateDataForInvoice = async ({
     ?.invoiceCustomization?.defaultSubject;
 
   let subject;
+  const companyName = cleanText(CompanyDetails?.name || 'Paid, Inc');
+
   if (emailSubject) {
-    subject = emailSubject;
+    subject = cleanText(emailSubject);
   } else if (isSubscription) {
-    subject = `${reminder ? '[Reminder]' : ''} Invoice for Subscription from ‪${
-      CompanyDetails ? CompanyDetails?.name : 'Paid, Inc'
-    }`;
+    subject = `${
+      reminder ? '[Reminder]' : ''
+    } Invoice for Subscription from ${companyName}`;
   } else if (defaultSubject) {
-    subject = `${reminder ? '[Reminder]' : ''} ${defaultSubject}`;
+    subject = `${reminder ? '[Reminder]' : ''} ${cleanText(defaultSubject)}`;
   } else {
-    subject = `${reminder ? '[Reminder]' : ''} Invoice from ‪${
-      CompanyDetails?.name || 'Paid, Inc'
-    }`;
+    subject = `${reminder ? '[Reminder]' : ''} Invoice from ${companyName}`;
   }
+
   const invoiceNumber =
     number || invoice?.number || invoice?.latest_invoice?.number;
 
@@ -152,14 +160,14 @@ const fetDynamicTemplateDataForInvoice = async ({
     ).toFixed(2)} ${currency.toUpperCase()}`,
     number: invoiceNumber,
     title: isSubscription
-      ? `Invoice for Subscription from ‪${CompanyDetails?.name || 'Paid, Inc'}`
-      : `Invoice from ‪${CompanyDetails?.name || 'Paid, Inc'}`,
+      ? `Invoice for Subscription from ${companyName}`
+      : `Invoice from ${companyName}`,
     subject,
     customMessage:
       emailBody ||
       defaultCustomerMessage ||
       `Here's your invoice! We appreciate your prompt payment.`,
-    companyName: `‪${CompanyDetails ? CompanyDetails.name : 'Paid, Inc'}`,
+    companyName,
     button_text: isPaid ? 'Review Invoice' : 'Pay and Review',
     pay_now: `${domain}/pay-invoice/${token}`
   };
